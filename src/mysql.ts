@@ -1,4 +1,4 @@
-import { PoolConfig, createPool, PoolConnection, Pool } from 'mysql';
+import {PoolConfig, createPool, PoolConnection, Pool, OkPacket} from 'mysql';
 import debug from 'debug';
 import { typeOf, isEmptyObject } from './utils';
 
@@ -52,7 +52,7 @@ class MysqlPool {
   }
 }
 
-class Builder {
+export class Builder {
   private query: (sql: string) => Promise<any>;
 
   private _tableName: string;
@@ -70,6 +70,7 @@ class Builder {
     this._tableName = tableName;
     this.query = query;
   }
+
 
   /**
    * 设置表的别名
@@ -334,11 +335,26 @@ class Builder {
   }
 
   /**
+   * 返回总数
+   * @return {Promise<number>} 查询结果
+   */
+  async count() : Promise<number>{
+    if (!this._tableName) {
+      throw new Error('unknown table name!');
+    }
+
+    let sql = 'SELECT COUNT(*) as total'
+    sql += ' FROM `' + this._tableName + '`';
+    sql += this._formatWhere();
+    return (await this.query(sql))[0].total;
+  }
+
+  /**
    * 查找数据
    * @param {object|string} where where条件
    * @return {Promise<any>} 查询结果
    */
-  select(where?: Record<string, any> | string): Promise<any> {
+  select(where?: Record<string, any> | string): Promise<any[]> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
@@ -443,7 +459,7 @@ class Builder {
    * @param {object | false} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}，使用时 column 字段需要包含主键，参考sql ON DUPLICATE KEY UPDATE 用法
    * @return {Promise<any>} 操作结果
    */
-  add(column: Record<string, any>, duplicate: Record<string, any> | false = false): Promise<any> {
+  add(column: Record<string, any>, duplicate: Record<string, any> | false = false): Promise<OkPacket> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
@@ -871,12 +887,17 @@ export default class Mysql {
     this.mysqlPool = new MysqlPool(this.config);
   }
 
+  public async getConnection () : Promise<PoolConnection>{
+    return await this.mysqlPool.getConnection();
+  }
+
   /**
    * 直接执行sql语句
    * @param {string} sql sql语句
    * @return {Promise<any>} sql执行结果
    */
   async query(sql: string): Promise<any> {
+  
     this.sql = sql;
     const connection = await this.mysqlPool.getConnection();
     return new Promise((resolve, reject) => {

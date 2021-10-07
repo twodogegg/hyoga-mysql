@@ -63,6 +63,7 @@ Mysql 数据库实例，封装了常用操作方式
     - [.order(order)](#module_@hyoga/mysql..Mysql+order) ⇒ <code>Mysql</code>
     - [.join(join)](#module_@hyoga/mysql..Mysql+join) ⇒ <code>Mysql</code>
     - [.find(where)](#module_@hyoga/mysql..Mysql+find) ⇒ <code>Promise.&lt;any&gt;</code>
+    - [.count()](#module_@hyoga/mysql..Mysql+count) ⇒ <code>Promise.&lt;number&gt;</code>
     - [.select(where)](#module_@hyoga/mysql..Mysql+select) ⇒ <code>Promise.&lt;any&gt;</code>
     - [.update(column, where)](#module_@hyoga/mysql..Mysql+update) ⇒ <code>Promise.&lt;any&gt;</code>
     - [.updateMany(columnList, where)](#module_@hyoga/mysql..Mysql+updateMany) ⇒ <code>Promise.&lt;any&gt;</code>
@@ -74,36 +75,6 @@ Mysql 数据库实例，封装了常用操作方式
     - [.\_sql()](#module_@hyoga/mysql..Mysql+_sql) ⇒ <code>string</code>
 
 <a name="module_@hyoga/mysql..Mysql"></a>
-
-### @hyoga/mysql~Mysql
-
-**Kind**: inner class of [<code>@hyoga/mysql</code>](#module_@hyoga/mysql)
-
-- [~Mysql](#module_@hyoga/mysql..Mysql)
-  - [new Mysql(config)](#new_module_@hyoga/mysql..Mysql_new)
-  - [.query(sql)](#module_@hyoga/mysql..Mysql+query) ⇒ <code>Promise.&lt;any&gt;</code>
-  - [.table(tableName)](#module_@hyoga/mysql..Mysql+table) ⇒ <code>Mysql</code>
-  - [.alias(tableAlias)](#module_@hyoga/mysql..Mysql+alias) ⇒ <code>Mysql</code>
-  - [.field(fields)](#module_@hyoga/mysql..Mysql+field) ⇒ <code>Mysql</code>
-  - [.group(columns)](#module_@hyoga/mysql..Mysql+group) ⇒ <code>Mysql</code>
-  - [.where(where)](#module_@hyoga/mysql..Mysql+where) ⇒ <code>Mysql</code>
-  - [.limit(limit)](#module_@hyoga/mysql..Mysql+limit) ⇒ <code>Mysql</code>
-  - [.page(page, pageSize)](#module_@hyoga/mysql..Mysql+page) ⇒ <code>Mysql</code>
-  - [.data(data)](#module_@hyoga/mysql..Mysql+data) ⇒ <code>Mysql</code>
-  - [.order(order)](#module_@hyoga/mysql..Mysql+order) ⇒ <code>Mysql</code>
-  - [.join(join)](#module_@hyoga/mysql..Mysql+join) ⇒ <code>Mysql</code>
-  - [.find(where)](#module_@hyoga/mysql..Mysql+find) ⇒ <code>Promise.&lt;any&gt;</code>
-  - [.select(where)](#module_@hyoga/mysql..Mysql+select) ⇒ <code>Promise.&lt;any&gt;</code>
-  - [.update(column, where)](#module_@hyoga/mysql..Mysql+update) ⇒ <code>Promise.&lt;any&gt;</code>
-  - [.updateMany(columnList, where)](#module_@hyoga/mysql..Mysql+updateMany) ⇒ <code>Promise.&lt;any&gt;</code>
-  - [.increase(field, step)](#module_@hyoga/mysql..Mysql+increase) ⇒ <code>Promise.&lt;any&gt;</code>
-  - [.decrement(field, step)](#module_@hyoga/mysql..Mysql+decrement) ⇒ <code>Promise.&lt;any&gt;</code>
-  - [.add(column, duplicate)](#module_@hyoga/mysql..Mysql+add) ⇒ <code>Promise.&lt;any&gt;</code>
-  - [.addMany(columnList, duplicate)](#module_@hyoga/mysql..Mysql+addMany) ⇒ <code>Promise.&lt;any&gt;</code>
-  - [.delete(where)](#module_@hyoga/mysql..Mysql+delete) ⇒ <code>Promise.&lt;any&gt;</code>
-  - [.\_sql()](#module_@hyoga/mysql..Mysql+_sql) ⇒ <code>string</code>
-
-<a name="new_module_@hyoga/mysql..Mysql_new"></a>
 
 #### new Mysql(config)
 
@@ -208,6 +179,8 @@ where 条件设置，接受字符串或者对象形式，可以多次调用，�
 ```js
 // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') limit 1
 mysql.table('admins').where({ status: 'on' }).find();
+
+mysql.table('admins').where({ status: 'on' }).count();
 
 // SELECT `admins`.`*` FROM `admins` WHERE (id = 10 OR id < 2) limit 1
 mysql.table('admins').where('id = 10 OR id < 2').find();
@@ -388,6 +361,27 @@ mysql
 | ----- | ------------------------------------------ | ------------- | ----------- |
 | where | <code>object</code> \| <code>string</code> | <code></code> | where 条件  |
 
+
+<a name="module_@hyoga/mysql..Mysql+count"></a>
+
+#### mysql.count() ⇒ <code>Promise.&lt;number&gt;</code>
+
+返回总数
+
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Promise.&lt;number&gt;</code> - 查询结果
+
+| Param | Type                                       | Default       | Description |
+| ----- | ------------------------------------------ | ------------- | ----------- |
+| where | <code>object</code> \| <code>string</code> | <code></code> | where 条件  |
+
+**Example**
+
+```js
+mysql.table('admins').where({ status: 'on' }).count();
+```
+
+
 <a name="module_@hyoga/mysql..Mysql+select"></a>
 
 #### mysql.select(where) ⇒ <code>Promise.&lt;any&gt;</code>
@@ -506,3 +500,17 @@ mysql
 
 **Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
 **Returns**: <code>string</code> - 生成的 sql 语句
+
+## 事物操作
+
+```js
+const con = await this.getDb().getConnection()
+        con.beginTransaction(async err => {
+            if (err) {
+                return Promise.reject(err)
+            }
+
+            .....
+
+        })
+```
